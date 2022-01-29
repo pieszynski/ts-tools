@@ -24,7 +24,25 @@ const nodeEnv = typeof (process) !== 'undefined' ? process.env : undefined;
 const HIDE_TIMESTAMP = nodeEnv && nodeEnv.HIDE_TIMESTAMP === 'hide';
 const LOG_LEVEL = toLogLevelNum(nodeEnv && nodeEnv.LOG_LEVEL);
 
-class Log {
+export class Log {
+
+  private _context?: string;
+  get context() {
+    return this._context;
+  }
+
+  constructor(context?: string) {
+    this._context = context;
+  }
+
+  scopeTo(context: string) {
+    return new Log(context);
+  }
+
+  addScope(context: string) {
+    const bothContexts = `${this._context}] [${context}`;
+    return new Log(bothContexts);
+  }
 
   t(...rest: any[]) {
     if (!Log.canLog(LogLevel.Trace)) return;
@@ -52,7 +70,10 @@ class Log {
   }
 
   private logLevel(level: string, args: any[]) {
+    if (this._context) args.unshift(`[${this._context}]`);
+    
     args.unshift(`[${level}]`);
+
     if (!HIDE_TIMESTAMP) {
       args.unshift(Log.dt());
     }
